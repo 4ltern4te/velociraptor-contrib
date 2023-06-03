@@ -2,15 +2,17 @@
 From the `memfd_create()` man page: https://man7.org/linux/man-pages/man2/write.2.html
 
 ```
-memfd_create() creates an anonymous file and returns a file descriptor that refers to it. The file behaves like a regular file, and so can be modified, truncated, memory-mapped, and so on. However, unlike a regular file, it lives in RAM and has a volatile backing storage.
+memfd_create() creates an anonymous file and returns a file descriptor that refers to it. 
+The file behaves like a regular file, and so can be modified, truncated, memory-mapped, and so on. 
+However, unlike a regular file, it lives in RAM and has a volatile backing storage.
 ```
 
 We can then use the `fexecve()` to exec the code at the file descriptor returned from `memfd_create()`. From the `fexecve()` man pages: https://man7.org/linux/man-pages/man3/fexecve.3.html
 
 ```
 fexecve() performs the same task as execve(2), with the
-       difference that the file to be executed is specified via a file
-       descriptor, fd, rather than via a pathname.
+difference that the file to be executed is specified via a file
+descriptor, fd, rather than via a pathname.
 ```
 
 
