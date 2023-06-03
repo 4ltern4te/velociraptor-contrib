@@ -1,0 +1,35 @@
+name: Linux.Network.DNSResolvConfFile
+author: alternate
+description: |
+  Read network config files from the clients so they can be manually reviewed.
+
+reference:
+  - https://github.com/ForensicArtifacts/artifacts/blob/main/data/triage.yaml
+
+precondition: SELECT OS FROM info() WHERE OS = 'linux'
+
+parameters:
+- name: DNSResolvConfFile
+  default: /etc/resolv.conf
+
+- name: FileSize
+  default: 20000
+  type: int
+
+sources:
+- name: statDNSResolvConfFile
+  query: |
+	SELECT FullPath, Mtime, Size, Data, Mode FROM stat(filename=DNSResolvConfFile)
+
+- name: readDNSResolvConfFile
+  query: |
+	LET file = SELECT FullPath, Size FROM stat(filename=DNSResolvConfFile)
+	LET c = file.Size < FileSize
+   
+	SELECT * FROM if(condition=c,
+	  then=foreach(row=file.FullPath,
+			query={
+				SELECT Line FROM parse_lines(filename=file.FullPath) WHERE not Line =~ "^\\s*#"
+		}),
+	  else=log(level=ERROR, message=format(format="%s too large at %d bytes", args=[file.FullPath, file.Size]))
+	)

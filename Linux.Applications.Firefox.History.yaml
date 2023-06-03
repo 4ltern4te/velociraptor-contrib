@@ -1,0 +1,35 @@
+name: Linux.Applications.Firefox.History
+description: |
+  Read all User's Firefox history.
+
+parameters:
+  - name: historyGlobs
+    default: /{root,home/*}/.mozilla/firefox/*/places.sqlite
+
+  - name: urlSQLQuery
+    default: |
+      SELECT url as visited_url, title, visit_count,
+             typed_count, last_visit_time
+      FROM urls
+  - name: userRegex
+    default: .
+
+precondition: SELECT OS From info() where OS = 'linux'
+
+sources:
+  - query: |
+      LET history_files = SELECT 
+        FullPath, Mtime
+      FROM glob(globs=historyGlobs)
+
+      SELECT * FROM foreach(row=history_files,
+        query={
+           SELECT User, FullPath,
+              Mtime,
+              visited_url,
+              title, visit_count, typed_count,
+              timestamp(winfiletime=last_visit_time * 10) as last_visit_time
+          FROM sqlite(
+             file=FullPath,
+             query=urlSQLQuery)
+          })
